@@ -9,7 +9,7 @@ public class AckermanRouletteEditor : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core","Http",
             }
         );
 

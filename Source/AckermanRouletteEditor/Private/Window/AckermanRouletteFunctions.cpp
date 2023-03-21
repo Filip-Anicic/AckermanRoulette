@@ -1,10 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Window/AckermanRouletteFunctions.h"
+
+#include "HttpModule.h"
 #include "Window/RouletteDataAsset.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/StreamableManager.h"
+#include "Interfaces/IHttpRequest.h"
+#include "Interfaces/IHttpResponse.h"
 
 UAckermanRouletteFunctions::UAckermanRouletteFunctions(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -44,11 +48,11 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 				data.StaticMesh = mesh;
 				data.MeshIndex = meshIndex;
 				OnSuccess.Execute(data);
-				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i"), *FString("No static mesh found at element index!.", meshIndex));
+				UE_LOG(LogTemp, Log, TEXT("Successfully Spun Roulette: %s %i!"), *FString("Returned mesh at index "), meshIndex);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i"), *FString("No static mesh found at element index!.", meshIndex));
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i!"), *FString("No static mesh found at element index"), meshIndex);
 			}
 		});
 	};
@@ -58,10 +62,27 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 	else
 	{
 		//GET Random number over HTTP
-		FRandomStream RandomStream(FMath::Rand());
-		RandomStream.GenerateNewSeed();
-		uint8 randIdx = RandomStream.RandRange(0, meshCount-1);
-		AsyncLoadMesh(randIdx);
+		FHttpModule* Http = &FHttpModule::Get();
+		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
+
+		FString urlString = FString::Printf(TEXT("https://www.random.org/integers/?num=1&min=0&max=%d&col=1&base=10&format=plain&rnd=new"), (meshCount-1));
+		Request->SetURL(urlString);
+		Request->SetVerb("GET");
+		Request->SetHeader("Content-Type", "text/plain");
+		Request->OnProcessRequestComplete().BindLambda([AsyncLoadMesh](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
+		{
+			if(bConnectedSuccessfully)
+			{
+				if(Response->GetResponseCode() == 200)
+				{
+					const FString ResponseBody = Response->GetContentAsString();
+					uint8 randIdx = FCString::Atoi(*ResponseBody);
+					AsyncLoadMesh(randIdx);	
+				}
+			}			
+		});
+		
+		Request->ProcessRequest();
 	}
 }
 
