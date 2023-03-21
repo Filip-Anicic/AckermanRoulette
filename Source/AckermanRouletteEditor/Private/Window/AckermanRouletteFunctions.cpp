@@ -16,7 +16,19 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 {
 	UAckermanRouletteFunctions* newRouletteNode = NewObject<UAckermanRouletteFunctions>();
 	
+	if(!IsValid(RouletteDataAsset))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("RouletteDataAsset is not valid."));
+		return;
+	}
+		
 	int meshCount = RouletteDataAsset->RouletteMeshes.Num();
+	if(meshCount <= 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("RouletteDataAsset is empty!."));
+		return;
+	}
+
 	
 	auto AsyncLoadMesh = [RouletteDataAsset, OnSuccess](uint8 meshIndex)
 	{
@@ -32,6 +44,11 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 				data.StaticMesh = mesh;
 				data.MeshIndex = meshIndex;
 				OnSuccess.Execute(data);
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i"), *FString("No static mesh found at element index!.", meshIndex));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i"), *FString("No static mesh found at element index!.", meshIndex));
 			}
 		});
 	};
