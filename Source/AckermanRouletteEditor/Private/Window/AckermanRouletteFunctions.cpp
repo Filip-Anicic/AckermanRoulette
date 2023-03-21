@@ -16,30 +16,30 @@ UAckermanRouletteFunctions::UAckermanRouletteFunctions(const FObjectInitializer&
 }
 
 
-void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAsset, FRouletteDelegate OnSuccess)
+void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAsset, FRouletteDelegate OnSuccess, FRouletteFailureDelegate OnFail)
 {
-	UAckermanRouletteFunctions* newRouletteNode = NewObject<UAckermanRouletteFunctions>();
-	
 	if(!IsValid(RouletteDataAsset))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("RouletteDataAsset is not valid."));
+		OnFail.Execute("RouletteDataAsset is not valid");
 		return;
 	}
 		
 	int meshCount = RouletteDataAsset->RouletteMeshes.Num();
 	if(meshCount <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("RouletteDataAsset is empty!."));
+		UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("RouletteDataAsset is empty!"));
+		OnFail.Execute("RouletteDataAsset is empty");
 		return;
 	}
 
 	
-	auto AsyncLoadMesh = [RouletteDataAsset, OnSuccess](uint8 meshIndex)
+	auto AsyncLoadMesh = [RouletteDataAsset, OnSuccess, OnFail](uint8 meshIndex)
 	{
 		const TSoftObjectPtr<UStaticMesh> softMeshPtr = RouletteDataAsset->RouletteMeshes[meshIndex];
 		
 		UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(softMeshPtr.ToSoftObjectPath(),
-		[this, softMeshPtr, meshIndex, OnSuccess]()
+		[this, softMeshPtr, meshIndex, OnSuccess, OnFail]()
 		{
 			FRouletteResponseData data = FRouletteResponseData();
 			UStaticMesh* mesh = softMeshPtr.Get();
@@ -48,11 +48,12 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 				data.StaticMesh = mesh;
 				data.MeshIndex = meshIndex;
 				OnSuccess.Execute(data);
-				UE_LOG(LogTemp, Log, TEXT("Successfully Spun Roulette: %s %i!"), *FString("Returned mesh at index "), meshIndex);
+				UE_LOG(LogTemp, Log, TEXT("Successfully Spun Roulette: Returned mesh at index  %i!"), meshIndex);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s %i!"), *FString("No static mesh found at element index"), meshIndex);
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: No static mesh found at element index %i!"), meshIndex);
+				OnFail.Execute("No static mesh found at element index");
 			}
 		});
 	};
@@ -69,7 +70,7 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 		Request->SetURL(urlString);
 		Request->SetVerb("GET");
 		Request->SetHeader("Content-Type", "text/plain");
-		Request->OnProcessRequestComplete().BindLambda([AsyncLoadMesh](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
+		Request->OnProcessRequestComplete().BindLambda([AsyncLoadMesh, OnFail](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 		{
 			if(bConnectedSuccessfully)
 			{
@@ -80,10 +81,17 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 					AsyncLoadMesh(randIdx);	
 				}
 				else
-					UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: HTTP Response code: %i. Response body: %s"), Response->GetResponseCode(), *Response->GetContentAsString());
+				{
+					FString message = FString::Printf(TEXT("Failed Spinning Roulette: HTTP Response code: %i. Response body: %s"), Response->GetResponseCode(), *Response->GetContentAsString());
+					UE_LOG(LogTemp, Error, TEXT("%s"), *message);
+					OnFail.Execute(message);
+				}
 			}
 			else
-				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("Connection was not established. Check your internet connection"));			
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: Connection was not established. Check your internet connection"));
+				OnFail.Execute("Failed Spinning Roulette: Connection was not established. Check your internet connection");
+			}
 		});
 		
 		Request->ProcessRequest();
