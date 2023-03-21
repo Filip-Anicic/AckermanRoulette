@@ -4,7 +4,9 @@
 #include "AckermanRouletteEditor.h"
 #include "AckermanRouletteCommands.h"
 #include "AckermanRouletteStyle.h"
+#include "ISettingsModule.h"
 #include "ToolMenus.h"
+#include "Window/AckermanRouletteToolSettings.h"
 
 static const FName AckermanRouletteName("Ackerman's Roulette");
 
@@ -12,7 +14,20 @@ static const FName AckermanRouletteName("Ackerman's Roulette");
 
 void FAckermanRouletteEditorModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	//Register settings
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	if (SettingsModule)
+	{
+		//Load settings from .ini file
+		UAckermanRouletteToolSettings* settings = GetMutableDefault<UAckermanRouletteToolSettings>();
+		settings->LoadConfig();
+		
+		SettingsModule->RegisterSettings("Project", "Plugins", "Ackerman's Roulette",
+			FText::FromString("Ackerman's Roulette"),
+			FText::FromString("Configure Ackerman's Roulette Settings"),
+			settings
+		);
+	}
 	
 	//Initialize style
 	FAckermanRouletteStyle::Initialize();
@@ -46,6 +61,13 @@ void FAckermanRouletteEditorModule::ShutdownModule()
 	
 	//Unregister commands
 	FAckermanRouletteCommands::Unregister();
+
+	//Unregister settings
+	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	if (SettingsModule)
+	{
+		SettingsModule->UnregisterSettings("Project", "Plugins", "Ackerman's Roulette");
+	}
 }
 
 void FAckermanRouletteEditorModule::RouletteButtonClicked()
