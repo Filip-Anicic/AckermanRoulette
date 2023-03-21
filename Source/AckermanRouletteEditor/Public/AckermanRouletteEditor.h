@@ -25,4 +25,5 @@ private:
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
 	FReply OnRouletteButtomClicked();
+    void OnRouletteMeshLoaded(FRouletteResponseData Data);
 };

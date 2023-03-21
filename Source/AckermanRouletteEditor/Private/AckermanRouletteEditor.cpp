@@ -118,9 +118,23 @@ TSharedRef<SDockTab> FAckermanRouletteEditorModule::OnSpawnPluginTab(const FSpaw
 
 FReply FAckermanRouletteEditorModule::OnRouletteButtomClicked()
 {
-	
+	UE_LOG(LogTemp, Display, TEXT("Spin Ackerman's Roulette!"));
+	//Syncronously load Roulette Widget's selected data asset
+	auto dataAsset = RouletteWidget->GetCustomSettings()->DataAsset.LoadSynchronous();
+
+	//Call Spin Roulette and call OnrouletteMeshLoaded on success, else log error message
+	UAckermanRouletteFunctions::SpinRoulette(dataAsset,
+		FRouletteDelegate::CreateRaw(this, &FAckermanRouletteEditorModule::OnRouletteMeshLoaded));	
 	
 	return FReply::Handled();
+}
+
+void FAckermanRouletteEditorModule::OnRouletteMeshLoaded(FRouletteResponseData Data)
+{
+	UUnrealEditorSubsystem* EditorSubsystem = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>();
+	UObject* worldContext = EditorSubsystem->GetEditorWorld();
+	UAckermanRouletteToolSettings* toolSettings = RouletteWidget->GetCustomSettings();
+	UAckermanRouletteFunctions::SpawnMesh(worldContext, Data.StaticMesh, toolSettings->SpawnLocation, toolSettings->SpawnFolder);
 }
 
 #undef LOCTEXT_NAMESPACE
