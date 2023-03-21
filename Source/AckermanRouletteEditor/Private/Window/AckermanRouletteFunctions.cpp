@@ -79,7 +79,11 @@ void UAckermanRouletteFunctions::SpinRoulette(URouletteDataAsset* RouletteDataAs
 					uint8 randIdx = FCString::Atoi(*ResponseBody);
 					AsyncLoadMesh(randIdx);	
 				}
-			}			
+				else
+					UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: HTTP Response code: %i. Response body: %s"), Response->GetResponseCode(), *Response->GetContentAsString());
+			}
+			else
+				UE_LOG(LogTemp, Error, TEXT("Failed Spinning Roulette: %s"), *FString("Connection was not established. Check your internet connection"));			
 		});
 		
 		Request->ProcessRequest();
