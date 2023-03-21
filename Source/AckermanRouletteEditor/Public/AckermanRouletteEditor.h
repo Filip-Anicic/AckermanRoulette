@@ -3,6 +3,8 @@
 #pragma once
 
 #include "Modules/ModuleManager.h"
+#include "Window/AckermanRouletteFunctions.h"
+#include "Window/SAckermanRouletteWidget.h"
 
 class FAckermanRouletteEditorModule : public IModuleInterface
 {
@@ -17,7 +19,10 @@ public:
 	
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
+	TSharedPtr<SAckermanRouletteWidget> RouletteWidget;
 	
 	void RegisterMenus();
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
+
+	FReply OnRouletteButtomClicked();
 };

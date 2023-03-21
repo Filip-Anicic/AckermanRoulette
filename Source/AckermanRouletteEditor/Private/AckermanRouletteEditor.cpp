@@ -6,7 +6,9 @@
 #include "AckermanRouletteStyle.h"
 #include "ISettingsModule.h"
 #include "ToolMenus.h"
+#include "Subsystems/UnrealEditorSubsystem.h"
 #include "Window/AckermanRouletteToolSettings.h"
+#include "Window/SAckermanRouletteWidget.h"
 
 static const FName AckermanRouletteName("Ackerman's Roulette");
 
@@ -103,7 +105,22 @@ void FAckermanRouletteEditorModule::RegisterMenus()
 
 TSharedRef<SDockTab> FAckermanRouletteEditorModule::OnSpawnPluginTab(const FSpawnTabArgs& SpawnTabArgs)
 {
-	return SNew(SDockTab);
+	//Make Roulette widget
+	RouletteWidget = SNew(SAckermanRouletteWidget);
+	
+	//Bind event OnClicked SButton
+	RouletteWidget->SpinButton->SetOnClicked(FOnClicked::CreateRaw(this, &FAckermanRouletteEditorModule::OnRouletteButtomClicked));
+	
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[ RouletteWidget.ToSharedRef() ];
+}
+
+FReply FAckermanRouletteEditorModule::OnRouletteButtomClicked()
+{
+	
+	
+	return FReply::Handled();
 }
 
 #undef LOCTEXT_NAMESPACE
