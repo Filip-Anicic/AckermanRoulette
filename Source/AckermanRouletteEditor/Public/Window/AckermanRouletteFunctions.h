@@ -24,6 +24,7 @@ struct FRouletteResponseData
 
 
 DECLARE_DELEGATE_OneParam(FRouletteDelegate, FRouletteResponseData /* Data */)
+DECLARE_DELEGATE_OneParam(FWebDelegate, uint8 /* Data */)
 DECLARE_DELEGATE_OneParam(FRouletteFailureDelegate, FString /* Message */)
 
 UCLASS()
@@ -33,10 +34,11 @@ class UAckermanRouletteFunctions : public UBlueprintFunctionLibrary
 
 public:
 
-	//UFUNCTION(Category = "Ackerman Roulette", meta = (DisplayName = "Async Spin Roulette", Keywords = "ackermanroulette ackerman roulette"))
-	static void SpinRoulette(URouletteDataAsset* RouletteDataAsset, FRouletteDelegate OnSuccess = FRouletteDelegate(), FRouletteFailureDelegate OnFail = FRouletteFailureDelegate());
 	
-	//UFUNCTION(BlueprintCallable, Category = "Ackerman Roulette", meta = (DisplayName = "Spawn Mesh", Keywords = "ackermanroulette ackerman roulette", WorldContext="WorldContextObject"))
+	static void GetRandomNumber(uint8 min, uint8 max, FWebDelegate OnSuccess = FWebDelegate(), FRouletteFailureDelegate OnFail = FRouletteFailureDelegate());
+
+	static FString SpinRoulette(URouletteDataAsset* RouletteDataAsset, uint8 MeshIndex, FRouletteDelegate OnSuccess = FRouletteDelegate(), FRouletteFailureDelegate OnAsyncFail = FRouletteFailureDelegate());
+	
 	static AStaticMeshActor* SpawnMesh(const UObject* WorldContextObject, UStaticMesh* Mesh, const FVector MeshSpawnPosition, FName FolderPath = FName(TEXT("")));
 	
 };

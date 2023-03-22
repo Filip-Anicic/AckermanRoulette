@@ -120,11 +120,17 @@ FReply FAckermanRouletteEditorModule::OnRouletteButtomClicked()
 {
 	UE_LOG(LogTemp, Display, TEXT("Spin Ackerman's Roulette!"));
 	//Syncronously load Roulette Widget's selected data asset
-	auto dataAsset = RouletteWidget->GetCustomSettings()->DataAsset.LoadSynchronous();
+	TObjectPtr<URouletteDataAsset> dataAsset = RouletteWidget->GetCustomSettings()->DataAsset.LoadSynchronous();
 
-	//Call Spin Roulette and call OnrouletteMeshLoaded on success, else log error message
-	UAckermanRouletteFunctions::SpinRoulette(dataAsset,
-		FRouletteDelegate::CreateRaw(this, &FAckermanRouletteEditorModule::OnRouletteMeshLoaded));	
+	//Get random number with web request
+	uint8 maxInt = dataAsset->RouletteMeshes.Num() - 1;
+	UAckermanRouletteFunctions::GetRandomNumber(0, maxInt,
+		FWebDelegate::CreateLambda([dataAsset, this](uint8 meshIndex)
+		{
+			//Spin roulette and call OnRouletteMeshLoaded on success
+			UAckermanRouletteFunctions::SpinRoulette(dataAsset, meshIndex,
+				FRouletteDelegate::CreateRaw(this, &FAckermanRouletteEditorModule::OnRouletteMeshLoaded));	
+		}));
 	
 	return FReply::Handled();
 }
