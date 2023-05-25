@@ -19,8 +19,8 @@ https://user-images.githubusercontent.com/23241818/227052633-9af2e8b6-a206-417d-
 6. If no roulette toolbar icon is present, open the Plugins window, find and enable the Ackerman's Roulette plugin.
 
 ## How to use
-2. When enabled, open Ackerman's Roulette using the toolbar button or **Window->Ackerman's Roulette**.
-1. Use default plugin settings or change the data asset, spawn folder and spawn location.
+1. When enabled, open Ackerman's Roulette using the toolbar button or **Window->Ackerman's Roulette**.
+2. Use default plugin settings or change the data asset, spawn folder and spawn location.
 3. Press "Spin roulette"
 
 ## How to create custom data
