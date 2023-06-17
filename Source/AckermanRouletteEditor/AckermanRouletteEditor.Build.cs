@@ -24,7 +24,9 @@ public class AckermanRouletteEditor : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore", 
+                "AITestSuite",
+                "PropertyEditor"
             }
         );
     }
